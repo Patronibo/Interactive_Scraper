@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Scraper - CTI Dashboard</title>
+    <link rel="stylesheet" href="static/styles.css?v=5.1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="login-container">
+        <!-- Matrix Background Canvas -->
+        <canvas id="matrixCanvas" class="matrix-canvas"></canvas>
+        <div class="login-card">
+            <div class="login-header">
+                <div class="logo">🛡️</div>
+                <h1>Interactive Scraper</h1>
+                <p>CTI Dashboard</p>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-primary">Sign In</button>
+                <div id="loginError" class="error-message"></div>
+            </form>
+            <div class="login-credentials">
+                <div class="credentials-label">Test Credentials:</div>
+                <div class="credentials-info">
+                    <span class="cred-label">Username:</span> <span class="cred-value">admin</span>
+                </div>
+                <div class="credentials-info">
+                    <span class="cred-label">Password:</span> <span class="cred-value">admin123</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="dashboard hidden">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <button id="hamburgerBtn" class="hamburger-btn">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <h1>🛡️ Interactive Scraper</h1>
+                    <p class="subtitle">Cyber Threat Intelligence Dashboard</p>
+                </div>
+                <div class="header-right">
+                    <div class="tor-status-indicator checking" id="torStatusIndicator" style="display: flex !important; visibility: visible !important; opacity: 1 !important;">
+                        <span class="tor-status-icon" id="torStatusIcon">🔄</span>
+                        <span class="tor-status-text" id="torStatusText">Checking Tor...</span>
+                    </div>
+                    <button id="logoutBtn" class="btn-secondary">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <div class="sidebar-header">
+                    <h3>Navigation</h3>
+                </div>
+                <ul class="sidebar-menu">
+                    <li>
+                        <button class="sidebar-item active" data-tab="overview">
+                            <span class="sidebar-icon">📊</span>
+                            <span class="sidebar-label">Overview</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="sidebar-item" data-tab="entries">
+                            <span class="sidebar-icon">📝</span>
+                            <span class="sidebar-label">Total Entries</span>
+                            <span class="sidebar-badge" id="sidebarEntriesBadge">0</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="sidebar-item" data-tab="sources">
+                            <span class="sidebar-icon">🔗</span>
+                            <span class="sidebar-label">Active Sources</span>
+                            <span class="sidebar-badge" id="sidebarSourcesBadge">0</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="sidebar-item" data-tab="criticality">
+                            <span class="sidebar-icon">⚠️</span>
+                            <span class="sidebar-label">High Criticality</span>
+                            <span class="sidebar-badge" id="sidebarCriticalityBadge">0</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="sidebar-item" data-tab="categories">
+                            <span class="sidebar-icon">📁</span>
+                            <span class="sidebar-label">Categories</span>
+                            <span class="sidebar-badge" id="sidebarCategoriesBadge">0</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button class="sidebar-item" data-tab="ai-analysis">
+                            <span class="sidebar-icon">🤖</span>
+                            <span class="sidebar-label">AI Analysis</span>
+                            <span class="sidebar-badge" id="sidebarAIBadge">0</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Overview Tab Content -->
+            <div id="overviewTab" class="tab-content active">
+            <!-- Stats Overview -->
+            <section class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-content">
+                        <h3 id="totalEntries">0</h3>
+                        <p>Total Entries</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔗</div>
+                    <div class="stat-content">
+                        <h3 id="totalSources">0</h3>
+                        <p>Active Sources</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⚠️</div>
+                    <div class="stat-content">
+                        <h3 id="highCriticality">0</h3>
+                        <p>High Criticality</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📁</div>
+                    <div class="stat-content">
+                        <h3 id="totalCategories">0</h3>
+                        <p>Categories</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section -->
+            <section class="charts-section">
+                <div class="chart-card">
+                    <h2>📊 Kategori Dağılımı</h2>
+                    <p class="chart-description">Hangi tehdit türü baskın?</p>
+                    <canvas id="categoryChart" style="max-height: 300px; min-height: 250px;"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h2>⚠️ Kritiklik Dağılımı</h2>
+                    <p class="chart-description">Önceliklendirme için kritiklik seviyeleri</p>
+                    <canvas id="criticalityChart" style="max-height: 300px; min-height: 250px;"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h2>📈 Zaman Serisi Analizi</h2>
+                    <p class="chart-description">Tehdit aktivitesi trendi (son 30 gün)</p>
+                    <canvas id="timeSeriesChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h2>🤖 AI Analiz Durumu</h2>
+                    <p class="chart-description">Analiz tamamlanma oranı</p>
+                    <canvas id="aiAnalysisChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Filters and Search -->
+            <section class="filters-section">
+                <div class="filters-card">
+                    <input type="text" id="searchInput" placeholder="Search entries..." class="search-input">
+                    <select id="categoryFilter" class="filter-select">
+                        <option value="">All Categories</option>
+                    </select>
+                    <button id="refreshBtn" class="btn-primary">Refresh</button>
+                </div>
+            </section>
+
+            <!-- Entries Table -->
+            <section class="entries-section">
+                <div class="entries-card">
+                    <div class="entries-header">
+                        <h2>Data Entries</h2>
+                        <div class="pagination-info">
+                            <span id="paginationInfo">Showing 0-0 of 0</span>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="entries-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Source</th>
+                                    <th>Category</th>
+                                    <th>Criticality</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="entriesTableBody">
+                                <tr>
+                                    <td colspan="6" class="loading">Loading entries...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination">
+                        <button id="prevPage" class="btn-secondary" disabled>Previous</button>
+                        <span id="pageInfo">Page 1</span>
+                        <button id="nextPage" class="btn-secondary">Next</button>
+                    </div>
+                </div>
+            </section>
+            </div>
+
+            <!-- Total Entries Tab Content -->
+            <div id="entriesTab" class="tab-content">
+                <div class="tab-page-header">
+                    <h2>📝 Total Entries</h2>
+                    <p class="tab-description">Complete list of all collected threat intelligence entries</p>
+                </div>
+                <div class="entries-section">
+                    <div class="entries-card">
+                        <div class="entries-header">
+                            <h3>All Entries</h3>
+                            <div class="pagination-info">
+                                <span id="entriesTabPaginationInfo">Showing 0-0 of 0</span>
+                            </div>
+                        </div>
+                        <div class="filters-card" style="margin-bottom: 20px;">
+                            <input type="text" id="entriesTabSearchInput" placeholder="Search entries..." class="search-input">
+                            <select id="entriesTabCategoryFilter" class="filter-select">
+                                <option value="">All Categories</option>
+                            </select>
+                            <button id="entriesTabRefreshBtn" class="btn-primary">Refresh</button>
+                        </div>
+                        <div class="table-container">
+                            <table class="entries-table">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Source</th>
+                                        <th>Category</th>
+                                        <th>Criticality</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="entriesTabTableBody">
+                                    <tr>
+                                        <td colspan="6" class="loading">Loading entries...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination">
+                            <button id="entriesTabPrevPage" class="btn-secondary" disabled>Previous</button>
+                            <span id="entriesTabPageInfo">Page 1</span>
+                            <button id="entriesTabNextPage" class="btn-secondary">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Sources Tab Content -->
+            <div id="sourcesTab" class="tab-content">
+                <div class="tab-page-header">
+                    <h2>🔗 Active Sources</h2>
+                    <p class="tab-description">Monitor and manage all active data collection sources</p>
+                </div>
+                <div class="sources-section">
+                    <div class="sources-card">
+                        <div class="sources-header">
+                            <h3>Data Sources</h3>
+                            <div class="sources-actions">
+                                <span id="sourcesCount">0 active sources</span>
+                                <button id="triggerScrapeBtn" class="btn-secondary" style="display: inline-flex !important; visibility: visible !important; opacity: 1 !important; min-width: 140px; padding: 10px 20px;">🔄 Şimdi Tara</button>
+                                <button id="addSourceBtn" class="btn-primary">+ Add Source</button>
+                            </div>
+                        </div>
+                        <div class="sources-grid" id="sourcesGrid">
+                            <div class="loading">Loading sources...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- High Criticality Tab Content -->
+            <div id="criticalityTab" class="tab-content">
+                <div class="tab-page-header">
+                    <h2>⚠️ High Criticality Entries</h2>
+                    <p class="tab-description">Entries with criticality score ≥ 80 requiring immediate attention</p>
+                </div>
+                <div class="criticality-section">
+                    <div class="criticality-filters">
+                        <div class="filter-group">
+                            <label>Criticality Range:</label>
+                            <select id="criticalityRangeFilter" class="filter-select">
+                                <option value="80-100">High (80-100)</option>
+                                <option value="60-79">Medium-High (60-79)</option>
+                                <option value="40-59">Medium (40-59)</option>
+                                <option value="0-39">Low (0-39)</option>
+                            </select>
+                        </div>
+                        <button id="criticalityRefreshBtn" class="btn-primary">Refresh</button>
+                    </div>
+                    <div class="entries-card">
+                        <div class="entries-header">
+                            <h3>Critical Entries</h3>
+                            <div class="pagination-info">
+                                <span id="criticalityPaginationInfo">Showing 0-0 of 0</span>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="entries-table">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Source</th>
+                                        <th>Category</th>
+                                        <th>Criticality</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="criticalityTableBody">
+                                    <tr>
+                                        <td colspan="6" class="loading">Loading critical entries...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination">
+                            <button id="criticalityPrevPage" class="btn-secondary" disabled>Previous</button>
+                            <span id="criticalityPageInfo">Page 1</span>
+                            <button id="criticalityNextPage" class="btn-secondary">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories Tab Content -->
+            <div id="categoriesTab" class="tab-content">
+                <div class="tab-page-header">
+                    <h2>📁 Categories</h2>
+                    <p class="tab-description">View and analyze entries by threat category</p>
+                </div>
+                <div class="categories-section">
+                    <div class="categories-grid" id="categoriesGrid">
+                        <div class="loading">Loading categories...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Analysis Tab Content -->
+            <div id="ai-analysisTab" class="tab-content">
+                <div class="tab-page-header">
+                    <h2>🤖 AI Analysis</h2>
+                    <p class="tab-description">Entries with AI analyst commentary and interpretation</p>
+                </div>
+                <div class="ai-analysis-section">
+                    <div class="entries-card">
+                        <div class="entries-header">
+                            <h3>AI Analyzed Entries</h3>
+                            <div class="pagination-info">
+                                <span id="aiAnalysisPaginationInfo">Showing 0-0 of 0</span>
+                            </div>
+                        </div>
+                        <div class="filters-card" style="margin-bottom: 20px;">
+                            <input type="text" id="aiAnalysisSearchInput" placeholder="Search AI analyzed entries..." class="search-input">
+                            <button id="aiAnalysisRefreshBtn" class="btn-primary">Refresh</button>
+                        </div>
+                        <div class="table-container">
+                            <table class="entries-table">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Source</th>
+                                        <th>Category</th>
+                                        <th>Criticality</th>
+                                        <th>AI Analysis</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="aiAnalysisTableBody">
+                                    <tr>
+                                        <td colspan="7" class="loading">Loading AI analyzed entries...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination">
+                            <button id="aiAnalysisPrevPage" class="btn-secondary" disabled>Previous</button>
+                            <span id="aiAnalysisPageInfo">Page 1</span>
+                            <button id="aiAnalysisNextPage" class="btn-secondary">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- AI Chat Panel - Fixed Bottom (Only visible in dashboard) -->
+        <div id="chatPanel" class="chat-panel">
+            <div class="chat-header">
+                <div class="chat-header-left">
+                    <span class="chat-icon">🤖</span>
+                    <span class="chat-title">Lokal AI Chat</span>
+                    <span class="chat-status" id="chatStatus">Ready</span>
+                </div>
+                <button class="chat-toggle-btn" id="chatToggleBtn">
+                    <span id="chatToggleIcon">−</span>
+                </button>
+            </div>
+            <div class="chat-body" id="chatBody">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-message ai-message">
+                        <div class="message-content">
+                            <div class="message-avatar">🤖</div>
+                            <div class="message-text">
+                                Merhaba! Ben bir CTI analisti asistanıyım. Siber güvenlik tehditleri hakkında sorularınızı yanıtlayabilirim.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <input 
+                        type="text" 
+                        id="chatInput" 
+                        class="chat-input" 
+                        placeholder="Lokal AI ile sohbet et..."
+                        autocomplete="off"
+                    >
+                    <button id="chatSendBtn" class="chat-send-btn">
+                        <span>➤</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Source Modal -->
+    <div id="sourceModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="sourceModalTitle">Add Source</h2>
+                <button class="modal-close" id="closeSourceModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="sourceForm">
+                    <div class="form-group">
+                        <label for="sourceName">Source Name *</label>
+                        <input type="text" id="sourceName" name="sourceName" required placeholder="e.g., DarkNet Forum Alpha">
+                    </div>
+                    <div class="form-group">
+                        <label for="sourceURL">Source URL (.onion) *</label>
+                        <input type="text" id="sourceURL" name="sourceURL" required placeholder="http://example.onion">
+                        <small style="color: var(--text-secondary); margin-top: 4px; display: block;">
+                            Enter the full .onion URL (e.g., http://example123abc.onion)
+                        </small>
+                    </div>
+                    <div id="sourceError" class="error-message"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="saveSource" class="btn-primary">Save Source</button>
+                <button type="button" id="cancelSource" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Entry Detail Modal -->
+    <div id="entryModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Entry Details</h2>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="detail-group">
+                    <label>Source:</label>
+                    <p id="modalSource"></p>
+                </div>
+                <div class="detail-group">
+                    <label>Category:</label>
+                    <select id="modalCategory" class="detail-select"></select>
+                </div>
+                <div class="detail-group">
+                    <label>Criticality Score:</label>
+                    <div class="criticality-control">
+                        <input type="range" id="modalCriticality" min="0" max="100" value="0" class="criticality-slider">
+                        <span id="modalCriticalityValue">0</span>
+                    </div>
+                </div>
+                <div class="detail-group">
+                    <label>Paylaşım Tarihi:</label>
+                    <p id="modalShareDate"></p>
+                </div>
+                <div class="detail-group">
+                    <label>Sisteme Eklenme Tarihi:</label>
+                    <p id="modalCreatedAt"></p>
+                </div>
+                <div class="detail-group">
+                    <label>Content:</label>
+                    <div id="modalContent" class="content-display"></div>
+                </div>
+                <!-- AI Analyst Commentary - Secondary, Supporting Layer -->
+                <div class="detail-group ai-analysis-group" id="aiAnalysisGroup" style="display: none;">
+                    <label class="ai-analysis-label">
+                        <span class="ai-icon">🤖</span>
+                        AI Analist Yorumu
+                        <span class="ai-badge">Otomatik Yorum</span>
+                    </label>
+                    <div id="modalAIAnalysis" class="ai-analysis-content"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="saveChanges" class="btn-primary">Save Changes</button>
+                <button id="cancelChanges" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="static/app.js?v=5.7"></script>
+</body>
+</html>
+

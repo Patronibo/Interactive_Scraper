@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: scraper-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: scraper_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  tor:
+    image: dperson/torproxy:latest
+    container_name: scraper-tor
+    ports:
+      - "9050:9050"
+    restart: unless-stopped
+    healthcheck:
+      # Proper healthcheck: verify SOCKS5 port is open AND Tor process is alive
+      # Uses netcat to test port connectivity, then checks process
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 9050 && ps aux | grep -i '[t]or' || exit 1"]
+      interval: 10s  # Check more frequently
+      timeout: 3s    # Faster timeout
+      retries: 3     # Fewer retries needed
+      start_period: 60s  # Tor bootstrap can take 60-90 seconds, but start checking earlier
+
+  scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
+        BUILD_VERSION: ${BUILD_VERSION:-dev}
+      # Force rebuild when frontend changes by not using cache for frontend layer
+      no_cache: false
+    container_name: interactive-scraper
+    environment:
+      PORT: 8080
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: scraper_db
+      ADMIN_PASSWORD: admin123
+      TOR_PROXY: tor:9050
+      # AI_SERVICE_URL: http://host.docker.internal:11434  # Uncomment to enable AI service (e.g., Ollama)
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      tor:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/api/tor/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # Note: On Windows, use host.docker.internal to access host's 127.0.0.1:9050
+    # The code will use TOR_PROXY env var which is set to 127.0.0.1:9050
+    # But we need to map it through host.docker.internal in the code
+    
+    # DEVELOPMENT ONLY: Uncomment below for live frontend updates (volume mount)
+    # WARNING: Remove this in production - use COPY in Dockerfile instead
+    # volumes:
+    #   - ./frontend:/root/frontend:ro
+
+volumes:
+  postgres_data:
+
